@@ -1,0 +1,69 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Linux EC2 Webserver ServiceCatalog product. (fdp-1p4dlgcoi)
+Parameters:
+  LaunchConstraintARN:
+    Description: ARN of the launch constraint role for EC2 products.
+    Type: String
+    Default: arn:aws:iam::816834643736:role/SCEC2LaunchRole
+  PortfolioId:
+    Description: The SC portfolio this product will be attached to.
+    Type: String
+    Default: port-uqaak6sw23gro
+  PortfolioProvider:
+    Description: Provider Name
+    Type: String
+    Default: AWS
+  RepoRootURL:
+    Description: Root url for the repo containing the product templates.
+    Type: String
+    Default: "https://s3.amazonaws.com/aws-service-catalog-reference-architectures/"
+Resources:
+  Associatenginxcf:
+    Properties:
+      PortfolioId:
+        Ref: PortfolioId
+      ProductId:
+        Ref: WebserverProduct
+    Type: AWS::ServiceCatalog::PortfolioProductAssociation
+  WebserverProduct:
+    Type: AWS::ServiceCatalog::CloudFormationProduct
+    Properties:
+      AcceptLanguage: en
+      Description: This product builds one Amazon Linux EC2 webserver (Apache or NGINX)
+        instance.
+      Distributor:
+        Ref: PortfolioProvider
+      Name: Amazon Elastic Compute Cloud (EC2) Linux Webserver
+      Owner:
+        Ref: PortfolioProvider
+      ProvisioningArtifactParameters:
+      - Description: NGINX webserver
+        Info:
+          LoadTemplateFromURL:
+            Fn::Sub: ${RepoRootURL}ec2/sc-ec2-linux-nginx.json
+        Name: NGINX v2.0
+      - Description: Apache webserver
+        Info:
+          LoadTemplateFromURL:
+            Fn::Sub: ${RepoRootURL}ec2/sc-ec2-linux-apache.json
+        Name: Apache v2.0
+      SupportDescription: Operations Team
+      SupportEmail: support@yourcompany.com
+      SupportUrl: http://helpdesk.yourcompany.com
+      ReplaceProvisioningArtifacts: false
+  constraintnginxcf:
+    DependsOn: Associatenginxcf
+    Properties:
+      Description:
+        Ref: LaunchConstraintARN
+      PortfolioId:
+        Ref: PortfolioId
+      ProductId:
+        Ref: WebserverProduct
+      RoleArn:
+        Ref: LaunchConstraintARN
+    Type: AWS::ServiceCatalog::LaunchRoleConstraint
+Outputs:
+  ProductId:
+    Value:
+      Ref: WebserverProduct
